@@ -5,12 +5,8 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Message;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -70,6 +66,7 @@ public class UdeskWebChromeClient extends WebChromeClient {
         return true;
     }
 
+    //窗口关闭事件，默认处理关闭activty界面，可以通过ICloseWindow  回到处理对应的逻辑
     @Override
     public void onCloseWindow(WebView window) {
         if (closeWindow !=null){
@@ -122,6 +119,7 @@ public class UdeskWebChromeClient extends WebChromeClient {
                 if (null == uploadMessage&& null == uploadMessageAboveL){
                     return;
                 }
+                //上传文件 点取消需要如下设置。 否则再次点击上传文件没反应
                 if (data == null){
                     if (uploadMessage != null){
                         uploadMessage.onReceiveValue(null);
@@ -175,7 +173,5 @@ public class UdeskWebChromeClient extends WebChromeClient {
         uploadMessageAboveL.onReceiveValue(results);
         uploadMessageAboveL = null;
     }
-
-
 
 }
