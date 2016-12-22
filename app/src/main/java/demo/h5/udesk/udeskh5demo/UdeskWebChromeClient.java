@@ -126,8 +126,8 @@ public class UdeskWebChromeClient extends WebChromeClient {
                         uploadMessage = null;
                     }
                     if (uploadMessageAboveL != null){
-                        uploadMessageAboveL = null;
                         uploadMessageAboveL.onReceiveValue(null);
+                        uploadMessageAboveL = null;
                     }
                     return;
                 }
