@@ -70,9 +70,9 @@ public class UdeskWebChromeClient extends WebChromeClient {
     @Override
     public void onCloseWindow(WebView window) {
         if (closeWindow !=null){
-            closeWindow.closeActivty();
+//            closeWindow.closeActivty();
         }
-        super.onCloseWindow(window);
+//        super.onCloseWindow(window);
 
     }
 

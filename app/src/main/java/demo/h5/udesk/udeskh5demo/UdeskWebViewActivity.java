@@ -4,10 +4,12 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Window;
 import android.webkit.DownloadListener;
+import android.webkit.SslErrorHandler;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -101,6 +103,12 @@ public class UdeskWebViewActivity extends Activity {
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 UdeskWebViewActivity.this.finish();
+            }
+
+            @Override
+            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+//                super.onReceivedSslError(view, handler, error);
+                handler.proceed();
             }
 
             @Override
