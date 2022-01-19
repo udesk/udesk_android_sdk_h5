@@ -7,12 +7,16 @@ import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.view.Window;
 import android.webkit.DownloadListener;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import java.util.List;
 
 
 public class UdeskWebViewActivity extends Activity {
@@ -36,11 +40,34 @@ public class UdeskWebViewActivity extends Activity {
                 }
             });
             mwebView = (WebView) findViewById(R.id.webview);
-            settingWebView("http://udesksdk.udesk.cn/im_client");
+            initPermission();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+
+    private void initPermission() {
+        //检查权限
+        String[] permissions = FileUtil.checkPermission(this);
+        if (permissions.length == 0) {
+            //权限都申请了
+            settingWebView("https://addcn591.s2.udesk.cn/im_client/?web_plugin_id=9104&language=zh-HK&c_cf_device=android&nonce=61e6226a852f79.50540146&timestamp=1642472042545");
+        } else {
+            //申请权限
+            ActivityCompat.requestPermissions(this, permissions, 100);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        //测试授权  具体授权完善
+        settingWebView("https://addcn591.s2.udesk.cn/im_client/?web_plugin_id=9104&language=zh-HK&c_cf_device=android&nonce=61e6226a852f79.50540146&timestamp=1642472042545");
+    }
+
 
     @SuppressLint("NewApi")
     private void settingWebView(String url) {
