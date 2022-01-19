@@ -53,7 +53,7 @@ public class UdeskWebViewActivity extends Activity {
         String[] permissions = FileUtil.checkPermission(this);
         if (permissions.length == 0) {
             //权限都申请了
-            settingWebView("https://addcn591.s2.udesk.cn/im_client/?web_plugin_id=9104&language=zh-HK&c_cf_device=android&nonce=61e6226a852f79.50540146&timestamp=1642472042545");
+            settingWebView("http://udesksdk.udesk.cn/im_client");
         } else {
             //申请权限
             ActivityCompat.requestPermissions(this, permissions, 100);
@@ -65,7 +65,7 @@ public class UdeskWebViewActivity extends Activity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         //测试授权  具体授权完善
-        settingWebView("https://addcn591.s2.udesk.cn/im_client/?web_plugin_id=9104&language=zh-HK&c_cf_device=android&nonce=61e6226a852f79.50540146&timestamp=1642472042545");
+        settingWebView("http://udesksdk.udesk.cn/im_client");
     }
 
 
