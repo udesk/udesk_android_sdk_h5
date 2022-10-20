@@ -7,6 +7,8 @@ import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.view.Window;
 import android.webkit.DownloadListener;
 import android.webkit.SslErrorHandler;
@@ -14,16 +16,22 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import java.util.List;
+
 
 public class UdeskWebViewActivity extends Activity {
     private WebView mwebView;
     UdeskWebChromeClient udeskWebChromeClient;
+    private String url;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.udesk_webview);
+        if (getIntent() != null){
+            url = getIntent().getStringExtra("url");
+        }
         initViews();
     }
 
@@ -36,11 +44,34 @@ public class UdeskWebViewActivity extends Activity {
                 }
             });
             mwebView = (WebView) findViewById(R.id.webview);
-            settingWebView("http://udesksdk.udesk.cn/im_client");
+            initPermission();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+
+    private void initPermission() {
+        //检查权限
+        String[] permissions = FileUtil.checkPermission(this);
+        if (permissions.length == 0) {
+            //权限都申请了
+            settingWebView(url);
+        } else {
+            //申请权限
+            ActivityCompat.requestPermissions(this, permissions, 100);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        //测试授权  具体授权完善
+        settingWebView(url);
+    }
+
 
     @SuppressLint("NewApi")
     private void settingWebView(String url) {
@@ -113,8 +144,9 @@ public class UdeskWebViewActivity extends Activity {
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-
-                view.loadUrl(url);
+                Intent intent=new Intent(Intent.ACTION_VIEW,Uri.parse(url));
+                startActivity(intent);
+//                view.loadUrl(url);
                 return true;
             }
         });

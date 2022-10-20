@@ -7,6 +7,7 @@ import android.content.ClipData;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -27,7 +28,10 @@ public class UdeskWebChromeClient extends WebChromeClient {
     private final static int FILE_CHOOSER_RESULT_CODE = 10000;
     ICloseWindow closeWindow = null;
 
-
+    private Uri photoUri;
+    private Uri videoUri;
+    private final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 10001;
+    private final int CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE = 10002;
 
     public UdeskWebChromeClient(Activity context,ICloseWindow closeWindow) {
         mContext = context;
@@ -43,26 +47,56 @@ public class UdeskWebChromeClient extends WebChromeClient {
     // For Android < 3.0
     public void openFileChooser(ValueCallback<Uri> valueCallback) {
         uploadMessage = valueCallback;
-        openImageChooserActivity();
+        openFileChooserActivity();
     }
 
     // For Android  >= 3.0
     public void openFileChooser(ValueCallback valueCallback, String acceptType) {
         uploadMessage = valueCallback;
-        openImageChooserActivity();
+        if (acceptType.equals("video/*")){
+            videoUri = takeVedio(videoUri, CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE);
+        }else if (acceptType.equals("image/*")){
+            photoUri = takePhoto(photoUri, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+        }else {
+            openFileChooserActivity();
+        }
     }
 
     //For Android  >= 4.1
     public void openFileChooser(ValueCallback<Uri> valueCallback, String acceptType, String capture) {
+
         uploadMessage = valueCallback;
-        openImageChooserActivity();
+        if (acceptType.equals("video/*")){
+            videoUri = takeVedio(videoUri, CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE);
+        }else if (acceptType.equals("image/*")){
+            photoUri = takePhoto(photoUri, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+        }else {
+            openFileChooserActivity();
+        }
+
     }
 
     // For Android >= 5.0
     @Override
     public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, WebChromeClient.FileChooserParams fileChooserParams) {
         uploadMessageAboveL = filePathCallback;
-        openImageChooserActivity();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            String[] acceptTypes = fileChooserParams.getAcceptTypes();
+            if (acceptTypes.length > 0){
+                String acceptType = acceptTypes[0];
+                if (acceptType.equals("video/*")){
+                    videoUri = takeVedio(videoUri, CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE);
+                }else if (acceptType.equals("image/*")){
+                    photoUri = takePhoto(photoUri, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+                }else {
+                    openFileChooserActivity();
+                }
+            }else {
+                openFileChooserActivity();
+            }
+        }else {
+            openFileChooserActivity();
+        }
         return true;
     }
 
@@ -88,7 +122,7 @@ public class UdeskWebChromeClient extends WebChromeClient {
     }
 
 
-    private void openImageChooserActivity() {
+    private void openFileChooserActivity() {
 
         Intent i=createFileItent();
         mContext.startActivityForResult(Intent.createChooser(i, "Image Chooser"), FILE_CHOOSER_RESULT_CODE);
@@ -102,16 +136,44 @@ public class UdeskWebChromeClient extends WebChromeClient {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
-//        intent.setType("image/*");
-//        Intent   intent = new Intent(
-//                Intent.ACTION_PICK,
-//                MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-//        intent.setDataAndType(
-//                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-//                "image/*");
         return intent;
     }
 
+
+    protected Uri takeVedio(Uri uri, int code) {
+        try {
+            Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+            File file = FileUtil.getOutputVideoMediaFile(mContext);
+            uri = FileUtil.getOutputMediaFileUri(mContext,file);
+            if (Build.VERSION.SDK_INT >= 24) {
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            }
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+
+            intent.addCategory(Intent.CATEGORY_DEFAULT);
+            mContext.startActivityForResult(intent, code);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return uri;
+    }
+
+    protected Uri takePhoto(Uri uri, int code) {
+        try {
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            File file = FileUtil.getOutputMediaFile(mContext);
+            uri = FileUtil.getOutputMediaFileUri(mContext,file);
+            if (Build.VERSION.SDK_INT >= 24) {
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            }
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+            intent.addCategory(Intent.CATEGORY_DEFAULT);
+            mContext.startActivityForResult(intent, code);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return uri;
+    }
 
     public  void onActivityResult(int requestCode, int resultCode, Intent data){
 
@@ -143,7 +205,31 @@ public class UdeskWebChromeClient extends WebChromeClient {
 
                 }
 
+            }else  if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE){
+                if ( photoUri!= null) {
+                    if (uploadMessageAboveL != null){
+                        Uri[] results =new Uri[1];
+                        results[0] = photoUri;
+                        uploadMessageAboveL.onReceiveValue(results);
+                        uploadMessageAboveL = null;
+                    }else if (uploadMessage != null){
+                        uploadMessage.onReceiveValue(photoUri);
+                        uploadMessage = null;
+                    }
+                }
+            }else  if (requestCode == CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE){
+                if (videoUri != null) {
+                    if (uploadMessageAboveL != null){
+                        Uri[] results =new Uri[1];
+                        results[0] = videoUri;
+                        uploadMessageAboveL.onReceiveValue(results);
+                        uploadMessageAboveL = null;
+                    }else if (uploadMessage != null){
+                        uploadMessage.onReceiveValue(videoUri);
+                        uploadMessage = null;
+                    }
 
+                }
             }
 
     }
